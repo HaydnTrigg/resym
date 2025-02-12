@@ -1,3 +1,4 @@
+use resym_core::pdb_types::AccessSpecifierReconstructionFlavor;
 use resym_core::pdb_types::PrimitiveReconstructionFlavor;
 use serde::{Deserialize, Serialize};
 
@@ -10,11 +11,15 @@ pub struct ResymAppSettings {
     pub search_use_regex: bool,
     pub enable_syntax_hightlighting: bool,
     pub integers_as_hexadecimal: bool,
+    pub print_size_info: bool,
+    pub print_offset_info: bool,
+    pub print_brackets_new_line: bool,
     #[serde(with = "PrimitiveReconstructionFlavorDef")]
     pub primitive_types_flavor: PrimitiveReconstructionFlavor,
+    #[serde(with = "AccessSpecifierReconstructionFlavorDef")]
+    pub print_access_specifiers: AccessSpecifierReconstructionFlavor,
     pub print_header: bool,
     pub reconstruct_dependencies: bool,
-    pub print_access_specifiers: bool,
     // Ignore types in the `std` namespace (e.g., STL-generated types)
     pub ignore_std_types: bool,
     pub print_line_numbers: bool,
@@ -29,10 +34,13 @@ impl Default for ResymAppSettings {
             search_use_regex: false,
             enable_syntax_hightlighting: true,
             integers_as_hexadecimal: true,
+            print_size_info: true,
+            print_offset_info: true,
+            print_brackets_new_line: false,
             primitive_types_flavor: PrimitiveReconstructionFlavor::Portable,
             print_header: true,
             reconstruct_dependencies: true,
-            print_access_specifiers: true,
+            print_access_specifiers: AccessSpecifierReconstructionFlavor::Always,
             ignore_std_types: true,
             print_line_numbers: false,
         }
@@ -47,4 +55,13 @@ enum PrimitiveReconstructionFlavorDef {
     Microsoft,
     Raw,
     Msvc,
+}
+
+// Definition of the remote enum so that serde can its traits
+#[derive(Serialize, Deserialize)]
+#[serde(remote = "AccessSpecifierReconstructionFlavor")]
+enum AccessSpecifierReconstructionFlavorDef {
+    Disabled,
+    Always,
+    Automatic,
 }

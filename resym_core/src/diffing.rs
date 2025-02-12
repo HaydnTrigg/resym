@@ -9,7 +9,7 @@ use std::{fmt::Write, io};
 use crate::{
     error::{Result, ResymCoreError},
     pdb_file::PdbFile,
-    pdb_types::PrimitiveReconstructionFlavor,
+    pdb_types::{AccessSpecifierReconstructionFlavor, PrimitiveReconstructionFlavor},
     PKG_VERSION,
 };
 
@@ -33,10 +33,13 @@ pub fn diff_type_by_name<'p, T>(
     pdb_file_to: &PdbFile<'p, T>,
     type_name: &str,
     primitives_flavor: PrimitiveReconstructionFlavor,
+    print_access_specifiers: AccessSpecifierReconstructionFlavor,
     print_header: bool,
     reconstruct_dependencies: bool,
-    print_access_specifiers: bool,
     integers_as_hexadecimal: bool,
+    print_size_info: bool,
+    print_offset_info: bool,
+    print_brackets_new_line: bool,
     ignore_std_types: bool,
 ) -> Result<Diff>
 where
@@ -58,9 +61,12 @@ where
             .reconstruct_type_by_name(
                 type_name,
                 primitives_flavor,
-                reconstruct_dependencies,
                 print_access_specifiers,
+                reconstruct_dependencies,
                 integers_as_hexadecimal,
+                print_size_info,
+                print_offset_info,
+                print_brackets_new_line,
                 ignore_std_types,
             )
             .unwrap_or_default();
@@ -68,9 +74,12 @@ where
             .reconstruct_type_by_name(
                 type_name,
                 primitives_flavor,
-                reconstruct_dependencies,
                 print_access_specifiers,
+                reconstruct_dependencies,
                 integers_as_hexadecimal,
+                print_size_info,
+                print_offset_info,
+                print_brackets_new_line,
                 ignore_std_types,
             )
             .unwrap_or_default();
@@ -94,8 +103,8 @@ pub fn diff_module_by_path<'p, T>(
     pdb_file_to: &PdbFile<'p, T>,
     module_path: &str,
     primitives_flavor: PrimitiveReconstructionFlavor,
+    print_access_specifiers: AccessSpecifierReconstructionFlavor,
     print_header: bool,
-    print_access_specifiers: bool,
 ) -> Result<Diff>
 where
     T: io::Seek + io::Read + std::fmt::Debug + 'p,
@@ -143,8 +152,8 @@ pub fn diff_symbol_by_name<'p, T>(
     pdb_file_to: &PdbFile<'p, T>,
     symbol_name: &str,
     primitives_flavor: PrimitiveReconstructionFlavor,
+    print_access_specifiers: AccessSpecifierReconstructionFlavor,
     print_header: bool,
-    print_access_specifiers: bool,
 ) -> Result<Diff>
 where
     T: io::Seek + io::Read + std::fmt::Debug + 'p,

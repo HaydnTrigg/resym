@@ -1,10 +1,11 @@
-use std::fmt;
+use std::{char::from_digit, fmt};
 
 use super::{
     class::Class,
     enumeration::Enum,
     field::{FieldAccess, StaticField},
     fmt_union_fields_recursive, is_unnamed_type,
+    primitive_types::AccessSpecifierReconstructionFlavor,
     primitive_types::PrimitiveReconstructionFlavor,
     resolve_complete_type_index, type_bitfield_info, type_name, type_size, DataFormatConfiguration,
     Field, Method, NeededTypeSet, ReconstructibleTypeData, TypeForwarder,
@@ -325,7 +326,21 @@ impl ReconstructibleTypeData for Union<'_> {
         fmt_configuration: &DataFormatConfiguration,
         f: &mut impl std::fmt::Write,
     ) -> fmt::Result {
-        writeln!(f, "union {} {{ /* Size={:#x} */", self.name, self.size)?;
+        writeln!(
+            f,
+            "union {}{}{{{}",
+            self.name,
+            if fmt_configuration.print_brackets_new_line {
+                "\n"
+            } else {
+                " "
+            },
+            if fmt_configuration.print_size_info {
+                format!(" /* Size={:#x} */", self.size)
+            } else {
+                String::default()
+            }
+        )?;
 
         // Nested delcarations
         if !self.nested_classes.is_empty() {
@@ -355,10 +370,16 @@ impl ReconstructibleTypeData for Union<'_> {
             writeln!(
                 f,
                 "  {}static {} {}{};",
-                if fmt_configuration.print_access_specifiers {
-                    &field.access
-                } else {
-                    &FieldAccess::None
+                match fmt_configuration.print_access_specifiers {
+                    AccessSpecifierReconstructionFlavor::Disabled => &FieldAccess::None,
+                    AccessSpecifierReconstructionFlavor::Always => &field.access,
+                    AccessSpecifierReconstructionFlavor::Automatic => {
+                        if field.access != FieldAccess::Public {
+                            &field.access
+                        } else {
+                            &FieldAccess::None
+                        }
+                    }
                 },
                 field.type_left,
                 &field.name,
@@ -372,10 +393,16 @@ impl ReconstructibleTypeData for Union<'_> {
                 writeln!(
                     f,
                     "  {}{}{}{}{}({}){}{}{}{};",
-                    if fmt_configuration.print_access_specifiers {
-                        &method.access
-                    } else {
-                        &FieldAccess::None
+                    match fmt_configuration.print_access_specifiers {
+                        AccessSpecifierReconstructionFlavor::Disabled => &FieldAccess::None,
+                        AccessSpecifierReconstructionFlavor::Always => &method.access,
+                        AccessSpecifierReconstructionFlavor::Automatic => {
+                            if method.access != FieldAccess::Public {
+                                &method.access
+                            } else {
+                                &FieldAccess::None
+                            }
+                        }
                     },
                     if method.is_virtual { "virtual " } else { "" },
                     if method.is_ctor || method.is_dtor {
@@ -409,10 +436,16 @@ impl ReconstructibleTypeData for Union<'_> {
                 writeln!(
                     f,
                     "  {}{}static {}{}{}({}){}{}{};",
-                    if fmt_configuration.print_access_specifiers {
-                        &method.access
-                    } else {
-                        &FieldAccess::None
+                    match fmt_configuration.print_access_specifiers {
+                        AccessSpecifierReconstructionFlavor::Disabled => &FieldAccess::None,
+                        AccessSpecifierReconstructionFlavor::Always => &method.access,
+                        AccessSpecifierReconstructionFlavor::Automatic => {
+                            if method.access != FieldAccess::Public {
+                                &method.access
+                            } else {
+                                &FieldAccess::None
+                            }
+                        }
                     },
                     if method.is_virtual { "virtual " } else { "" },
                     method.return_type_name.0,

@@ -278,10 +278,13 @@ impl ResymApp {
                                             ResymPDBSlots::Main as usize,
                                             type_index,
                                             self.settings.app_settings.primitive_types_flavor,
+                                            self.settings.app_settings.print_access_specifiers,
                                             self.settings.app_settings.print_header,
                                             self.settings.app_settings.reconstruct_dependencies,
-                                            self.settings.app_settings.print_access_specifiers,
                                             self.settings.app_settings.integers_as_hexadecimal,
+                                            self.settings.app_settings.print_size_info,
+                                            self.settings.app_settings.print_offset_info,
+                                            self.settings.app_settings.print_brackets_new_line,
                                             self.settings.app_settings.ignore_std_types,
                                         ),
                                     ) {
@@ -295,10 +298,13 @@ impl ResymApp {
                                             ResymPDBSlots::Diff as usize,
                                             type_name.to_string(),
                                             self.settings.app_settings.primitive_types_flavor,
+                                            self.settings.app_settings.print_access_specifiers,
                                             self.settings.app_settings.print_header,
                                             self.settings.app_settings.reconstruct_dependencies,
-                                            self.settings.app_settings.print_access_specifiers,
                                             self.settings.app_settings.integers_as_hexadecimal,
+                                            self.settings.app_settings.print_size_info,
+                                            self.settings.app_settings.print_offset_info,
+                                            self.settings.app_settings.print_brackets_new_line,
                                             self.settings.app_settings.ignore_std_types,
                                         ))
                                     {
@@ -360,8 +366,8 @@ impl ResymApp {
                                                 ResymPDBSlots::Main as usize,
                                                 symbol_index,
                                                 self.settings.app_settings.primitive_types_flavor,
-                                                self.settings.app_settings.print_header,
                                                 self.settings.app_settings.print_access_specifiers,
+                                                self.settings.app_settings.print_header,
                                             ),
                                         ) {
                                             log::error!("Failed to reconstruct type: {}", err);
@@ -374,8 +380,8 @@ impl ResymApp {
                                                 ResymPDBSlots::Diff as usize,
                                                 symbol_name.to_string(),
                                                 self.settings.app_settings.primitive_types_flavor,
-                                                self.settings.app_settings.print_header,
                                                 self.settings.app_settings.print_access_specifiers,
+                                                self.settings.app_settings.print_header,
                                             ),
                                         ) {
                                             log::error!("Failed to reconstruct type diff: {}", err);
@@ -424,8 +430,8 @@ impl ResymApp {
                                             ResymPDBSlots::Main as usize,
                                             module_info.pdb_index,
                                             self.settings.app_settings.primitive_types_flavor,
-                                            self.settings.app_settings.print_header,
                                             self.settings.app_settings.print_access_specifiers,
+                                            self.settings.app_settings.print_header,
                                         ),
                                     ) {
                                         log::error!("Failed to reconstruct module: {}", err);
@@ -439,8 +445,8 @@ impl ResymApp {
                                             ResymPDBSlots::Diff as usize,
                                             module_path.to_string(),
                                             self.settings.app_settings.primitive_types_flavor,
-                                            self.settings.app_settings.print_header,
                                             self.settings.app_settings.print_access_specifiers,
+                                            self.settings.app_settings.print_header,
                                         ))
                                     {
                                         log::error!("Failed to reconstruct type diff: {}", err);
@@ -501,10 +507,13 @@ impl ResymApp {
                                         ResymPDBSlots::Main as usize,
                                         type_index,
                                         self.settings.app_settings.primitive_types_flavor,
+                                        self.settings.app_settings.print_access_specifiers,
                                         self.settings.app_settings.print_header,
                                         self.settings.app_settings.reconstruct_dependencies,
-                                        self.settings.app_settings.print_access_specifiers,
                                         self.settings.app_settings.integers_as_hexadecimal,
+                                        self.settings.app_settings.print_size_info,
+                                        self.settings.app_settings.print_offset_info,
+                                        self.settings.app_settings.print_brackets_new_line,
                                         self.settings.app_settings.ignore_std_types,
                                     ))
                             {

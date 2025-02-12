@@ -24,6 +24,26 @@ impl FromStr for PrimitiveReconstructionFlavor {
     }
 }
 
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum AccessSpecifierReconstructionFlavor {
+    Disabled,
+    Always,
+    Automatic,
+}
+
+impl FromStr for AccessSpecifierReconstructionFlavor {
+    type Err = ResymCoreError;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "disabled" | "false" => Ok(AccessSpecifierReconstructionFlavor::Disabled),
+            "always" | "true" => Ok(AccessSpecifierReconstructionFlavor::Always),
+            "automatic" => Ok(AccessSpecifierReconstructionFlavor::Automatic),
+            _ => Err(ResymCoreError::ParsePrimitiveFlavorError(s.to_owned())),
+        }
+    }
+}
+
 pub fn include_headers_for_flavor(
     flavor: PrimitiveReconstructionFlavor,
     ignore_std_types: bool,

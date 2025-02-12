@@ -20,7 +20,8 @@ use crate::{
     frontend::ReconstructedType,
     par_iter_if_available,
     pdb_types::{
-        self, is_unnamed_type, type_name, DataFormatConfiguration, PrimitiveReconstructionFlavor,
+        self, is_unnamed_type, type_name, AccessSpecifierReconstructionFlavor,
+        DataFormatConfiguration, PrimitiveReconstructionFlavor,
     },
 };
 
@@ -290,9 +291,12 @@ where
         &self,
         type_name: &str,
         primitives_flavor: PrimitiveReconstructionFlavor,
+        print_access_specifiers: AccessSpecifierReconstructionFlavor,
         reconstruct_dependencies: bool,
-        print_access_specifiers: bool,
         integers_as_hexadecimal: bool,
+        print_size_info: bool,
+        print_offset_info: bool,
+        print_brackets_new_line: bool,
         ignore_std_types: bool,
     ) -> Result<ReconstructedType> {
         // Populate our `TypeFinder` and find the right type index
@@ -380,9 +384,12 @@ where
                 &type_finder,
                 type_index,
                 primitives_flavor,
-                reconstruct_dependencies,
                 print_access_specifiers,
+                reconstruct_dependencies,
                 integers_as_hexadecimal,
+                print_size_info,
+                print_offset_info,
+                print_brackets_new_line,
                 ignore_std_types,
             )
         }
@@ -392,9 +399,12 @@ where
         &self,
         type_index: TypeIndex,
         primitives_flavor: PrimitiveReconstructionFlavor,
+        print_access_specifiers: AccessSpecifierReconstructionFlavor,
         reconstruct_dependencies: bool,
-        print_access_specifiers: bool,
         integers_as_hexadecimal: bool,
+        print_size_info: bool,
+        print_offset_info: bool,
+        print_brackets_new_line: bool,
         ignore_std_types: bool,
     ) -> Result<ReconstructedType> {
         // Populate our `TypeFinder`
@@ -410,9 +420,12 @@ where
             &type_finder,
             type_index,
             primitives_flavor,
-            reconstruct_dependencies,
             print_access_specifiers,
+            reconstruct_dependencies,
             integers_as_hexadecimal,
+            print_size_info,
+            print_offset_info,
+            print_brackets_new_line,
             ignore_std_types,
         )
     }
@@ -494,7 +507,7 @@ where
         &self,
         symbol_index: SymbolIndex,
         primitives_flavor: PrimitiveReconstructionFlavor,
-        print_access_specifiers: bool,
+        print_access_specifiers: AccessSpecifierReconstructionFlavor,
     ) -> Result<String> {
         // Populate our `TypeFinder`
         let mut type_finder = self.type_information.finder();
@@ -551,7 +564,7 @@ where
         &self,
         symbol_name: &str,
         primitives_flavor: PrimitiveReconstructionFlavor,
-        print_access_specifiers: bool,
+        print_access_specifiers: AccessSpecifierReconstructionFlavor,
     ) -> Result<String> {
         // Populate our `TypeFinder`
         let mut type_finder = self.type_information.finder();
@@ -613,7 +626,7 @@ where
     pub fn reconstruct_all_symbols(
         &self,
         primitives_flavor: PrimitiveReconstructionFlavor,
-        print_access_specifiers: bool,
+        print_access_specifiers: AccessSpecifierReconstructionFlavor,
     ) -> Result<String> {
         // Populate our `TypeFinder`
         let mut type_finder = self.type_information.finder();
@@ -671,7 +684,7 @@ where
         &self,
         module_path: &str,
         primitives_flavor: PrimitiveReconstructionFlavor,
-        print_access_specifiers: bool,
+        print_access_specifiers: AccessSpecifierReconstructionFlavor,
     ) -> Result<String> {
         // Find index for module
         let mut modules = self.debug_information.modules()?;
@@ -694,7 +707,7 @@ where
         &self,
         module_index: usize,
         primitives_flavor: PrimitiveReconstructionFlavor,
-        print_access_specifiers: bool,
+        print_access_specifiers: AccessSpecifierReconstructionFlavor,
     ) -> Result<String> {
         let mut modules = self.debug_information.modules()?;
         let module = modules.nth(module_index)?.ok_or_else(|| {
@@ -746,14 +759,20 @@ where
         type_finder: &pdb::TypeFinder,
         type_index: TypeIndex,
         primitives_flavor: PrimitiveReconstructionFlavor,
+        print_access_specifiers: AccessSpecifierReconstructionFlavor,
         reconstruct_dependencies: bool,
-        print_access_specifiers: bool,
         integers_as_hexadecimal: bool,
+        print_size_info: bool,
+        print_offset_info: bool,
+        print_brackets_new_line: bool,
         ignore_std_types: bool,
     ) -> Result<ReconstructedType> {
         let fmt_configuration = DataFormatConfiguration {
             print_access_specifiers,
             integers_as_hexadecimal,
+            print_size_info,
+            print_offset_info,
+            print_brackets_new_line,
         };
         let mut type_data = pdb_types::Data::new(ignore_std_types);
 
@@ -854,8 +873,11 @@ where
     pub fn reconstruct_all_types(
         &self,
         primitives_flavor: PrimitiveReconstructionFlavor,
-        print_access_specifiers: bool,
+        print_access_specifiers: AccessSpecifierReconstructionFlavor,
         integers_as_hexadecimal: bool,
+        print_size_info: bool,
+        print_offset_info: bool,
+        print_brackets_new_line: bool,
         ignore_std_types: bool,
     ) -> Result<String> {
         let mut type_data = pdb_types::Data::new(ignore_std_types);
@@ -931,6 +953,9 @@ where
             &DataFormatConfiguration {
                 print_access_specifiers,
                 integers_as_hexadecimal,
+                print_size_info,
+                print_offset_info,
+                print_brackets_new_line,
             },
             &type_depth_map,
             &mut reconstruction_output,
@@ -1035,7 +1060,7 @@ where
         type_finder: &pdb::ItemFinder<'_, pdb::TypeIndex>,
         symbol: &pdb::Symbol<'_>,
         primitives_flavor: PrimitiveReconstructionFlavor,
-        print_access_specifiers: bool,
+        print_access_specifiers: AccessSpecifierReconstructionFlavor,
     ) -> Option<String> {
         let mut needed_types = pdb_types::NeededTypeSet::new();
         match symbol.parse().ok()? {
@@ -1294,13 +1319,13 @@ fn symbol_rva(
 
 fn demangle_symbol_name(
     symbol_name: impl AsRef<str>,
-    print_access_specifiers: bool,
+    print_access_specifiers: AccessSpecifierReconstructionFlavor,
 ) -> Option<String> {
     const CXX_ACCESS_SPECIFIERS: [&str; 3] = ["public: ", "protected: ", "private: "];
 
     msvc_demangler::demangle(symbol_name.as_ref(), msvc_demangler::DemangleFlags::llvm())
         .map(|mut s| {
-            if !print_access_specifiers {
+            if print_access_specifiers != AccessSpecifierReconstructionFlavor::Disabled {
                 // Strip access specifiers
                 CXX_ACCESS_SPECIFIERS.iter().for_each(|specifier| {
                     if let Some(stripped_s) = s.strip_prefix(specifier) {

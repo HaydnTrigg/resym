@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use resym_core::pdb_types::PrimitiveReconstructionFlavor;
+use resym_core::pdb_types::{AccessSpecifierReconstructionFlavor, PrimitiveReconstructionFlavor};
 use structopt::StructOpt;
 
 const PKG_NAME: &str = env!("CARGO_PKG_NAME");
@@ -48,10 +48,19 @@ pub enum ResymcOptions {
         print_dependencies: bool,
         /// Print C++ access specifiers
         #[structopt(short = "a", long)]
-        print_access_specifiers: bool,
+        print_access_specifiers: Option<AccessSpecifierReconstructionFlavor>,
         /// Use hexadecimal formatting
         #[structopt(short = "x", long)]
         integers_as_hexadecimal: bool,
+        /// Print Size Info
+        #[structopt(short = "psi", long)]
+        print_size_info: bool,
+        /// Print Offset Info
+        #[structopt(short = "poi", long)]
+        print_offset_info: bool,
+        /// Print Brackets On New Line
+        #[structopt(short = "pnl", long)]
+        print_brackets_new_line: bool,
         /// Filter out types in the `std` namespace
         #[structopt(short = "s", long)]
         ignore_std_types: bool,
@@ -73,10 +82,19 @@ pub enum ResymcOptions {
         print_header: bool,
         /// Print C++ access specifiers
         #[structopt(short = "a", long)]
-        print_access_specifiers: bool,
+        print_access_specifiers: Option<AccessSpecifierReconstructionFlavor>,
         /// Use hexadecimal formatting
         #[structopt(short = "x", long)]
         integers_as_hexadecimal: bool,
+        /// Print Size Info
+        #[structopt(short = "psi", long)]
+        print_size_info: bool,
+        /// Print Offset Info
+        #[structopt(short = "poi", long)]
+        print_offset_info: bool,
+        /// Print Brackets On New Line
+        #[structopt(short = "pnl", long)]
+        print_brackets_new_line: bool,
         /// Filter out types in the `std` namespace
         #[structopt(short = "s", long)]
         ignore_std_types: bool,
@@ -105,10 +123,19 @@ pub enum ResymcOptions {
         print_dependencies: bool,
         /// Print C++ access specifiers
         #[structopt(short = "a", long)]
-        print_access_specifiers: bool,
+        print_access_specifiers: Option<AccessSpecifierReconstructionFlavor>,
         /// Use hexadecimal formatting
         #[structopt(short = "x", long)]
         integers_as_hexadecimal: bool,
+        /// Print Size Info
+        #[structopt(short = "psi", long)]
+        print_size_info: bool,
+        /// Print Offset Info
+        #[structopt(short = "poi", long)]
+        print_offset_info: bool,
+        /// Print Brackets On New Line
+        #[structopt(short = "pnl", long)]
+        print_brackets_new_line: bool,
         /// Filter out types in the `std` namespace
         #[structopt(short = "s", long)]
         ignore_std_types: bool,
@@ -147,7 +174,7 @@ pub enum ResymcOptions {
         print_header: bool,
         /// Print C++ access specifiers
         #[structopt(short = "a", long)]
-        print_access_specifiers: bool,
+        print_access_specifiers: Option<AccessSpecifierReconstructionFlavor>,
         /// Highlight C++ output
         #[structopt(short = "H", long)]
         highlight_syntax: bool,
@@ -170,7 +197,7 @@ pub enum ResymcOptions {
         print_header: bool,
         /// Print C++ access specifiers
         #[structopt(short = "a", long)]
-        print_access_specifiers: bool,
+        print_access_specifiers: Option<AccessSpecifierReconstructionFlavor>,
         /// Highlight C++ output and add/deleted lines
         #[structopt(short = "H", long)]
         highlight_syntax: bool,
@@ -209,7 +236,7 @@ pub enum ResymcOptions {
         print_header: bool,
         /// Print C++ access specifiers
         #[structopt(short = "a", long)]
-        print_access_specifiers: bool,
+        print_access_specifiers: Option<AccessSpecifierReconstructionFlavor>,
         /// Highlight C++ output
         #[structopt(short = "H", long)]
         highlight_syntax: bool,
@@ -228,7 +255,7 @@ pub enum ResymcOptions {
         print_header: bool,
         /// Print C++ access specifiers
         #[structopt(short = "a", long)]
-        print_access_specifiers: bool,
+        print_access_specifiers: Option<AccessSpecifierReconstructionFlavor>,
         /// Highlight C++ output
         #[structopt(short = "H", long)]
         highlight_syntax: bool,
@@ -251,7 +278,7 @@ pub enum ResymcOptions {
         print_header: bool,
         /// Print C++ access specifiers
         #[structopt(short = "a", long)]
-        print_access_specifiers: bool,
+        print_access_specifiers: Option<AccessSpecifierReconstructionFlavor>,
         /// Highlight C++ output and add/deleted lines
         #[structopt(short = "H", long)]
         highlight_syntax: bool,

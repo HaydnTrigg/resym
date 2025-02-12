@@ -27,7 +27,10 @@ use crate::{
     frontend::{FrontendCommand, FrontendController, ReconstructedType},
     par_iter_if_available, par_sort_by_if_available,
     pdb_file::{self, ModuleList, PDBDataSource, PdbFile, SymbolList, SymbolListView, TypeList},
-    pdb_types::{include_headers_for_flavor, PrimitiveReconstructionFlavor},
+    pdb_types::{
+        include_headers_for_flavor, AccessSpecifierReconstructionFlavor,
+        PrimitiveReconstructionFlavor,
+    },
     PKG_VERSION,
 };
 
@@ -50,32 +53,41 @@ pub enum BackendCommand {
     ReconstructTypeByIndex(
         PDBSlot,
         pdb_file::TypeIndex,
-        PrimitiveReconstructionFlavor,
-        bool,
-        bool,
-        bool,
-        bool,
-        bool,
+        PrimitiveReconstructionFlavor,       // primitive_types_flavor
+        AccessSpecifierReconstructionFlavor, // print_access_specifiers,
+        bool,                                // print_header
+        bool,                                // reconstruct_dependencies
+        bool,                                // integers_as_hexadecimal
+        bool,                                // print_size_info
+        bool,                                // print_offset_info
+        bool,                                // print_brackets_new_line
+        bool,                                // ignore_std_types
     ),
     /// Reconstruct a type given its name for a given PDB.
     ReconstructTypeByName(
         PDBSlot,
         String,
-        PrimitiveReconstructionFlavor,
-        bool,
-        bool,
-        bool,
-        bool,
-        bool,
+        PrimitiveReconstructionFlavor,       // primitive_types_flavor
+        AccessSpecifierReconstructionFlavor, // print_access_specifiers,
+        bool,                                // print_header
+        bool,                                // reconstruct_dependencies
+        bool,                                // integers_as_hexadecimal
+        bool,                                // print_size_info
+        bool,                                // print_offset_info
+        bool,                                // print_brackets_new_line
+        bool,                                // ignore_std_types
     ),
     /// Reconstruct all types found in a given PDB.
     ReconstructAllTypes(
         PDBSlot,
-        PrimitiveReconstructionFlavor,
-        bool,
-        bool,
-        bool,
-        bool,
+        PrimitiveReconstructionFlavor,       // primitive_types_flavor
+        AccessSpecifierReconstructionFlavor, // print_access_specifiers,
+        bool,                                // print_header
+        bool,                                // integers_as_hexadecimal
+        bool,                                // print_size_info
+        bool,                                // print_offset_info
+        bool,                                // print_brackets_new_line
+        bool,                                // ignore_std_types
     ),
     /// Retrieve a list of types that match the given filter for a given PDB.
     ListTypes(PDBSlot, String, bool, bool, bool),
@@ -92,48 +104,68 @@ pub enum BackendCommand {
     ReconstructSymbolByIndex(
         PDBSlot,
         pdb_file::SymbolIndex,
-        PrimitiveReconstructionFlavor,
-        bool,
-        bool,
+        PrimitiveReconstructionFlavor,       // primitive_types_flavor
+        AccessSpecifierReconstructionFlavor, // print_access_specifiers,
+        bool,                                // print_header
     ),
     /// Reconstruct a symbol given its name for a given PDB.
-    ReconstructSymbolByName(PDBSlot, String, PrimitiveReconstructionFlavor, bool, bool),
+    ReconstructSymbolByName(
+        PDBSlot,
+        String,
+        PrimitiveReconstructionFlavor,       // primitive_types_flavor
+        AccessSpecifierReconstructionFlavor, // print_access_specifiers,
+        bool,                                // print_header
+    ),
     /// Reconstruct all symbols found in a given PDB.
-    ReconstructAllSymbols(PDBSlot, PrimitiveReconstructionFlavor, bool, bool),
+    ReconstructAllSymbols(
+        PDBSlot,
+        PrimitiveReconstructionFlavor,       // primitive_types_flavor
+        AccessSpecifierReconstructionFlavor, // print_access_specifiers,
+        bool,                                // print_header
+    ),
     /// Retrieve a list of modules that match the given filter for multiple PDBs
     /// and merge the result.
     ListModules(PDBSlot, String, bool, bool),
     /// Reconstruct a module given its index for a given PDB.
-    ReconstructModuleByIndex(PDBSlot, usize, PrimitiveReconstructionFlavor, bool, bool),
+    ReconstructModuleByIndex(
+        PDBSlot,
+        usize,
+        PrimitiveReconstructionFlavor,       // primitive_types_flavor
+        AccessSpecifierReconstructionFlavor, // print_access_specifiers,
+        bool,                                // print_header
+    ),
     /// Reconstruct the diff of a type given its name.
     DiffTypeByName(
-        PDBSlot,
-        PDBSlot,
-        String,
-        PrimitiveReconstructionFlavor,
-        bool,
-        bool,
-        bool,
-        bool,
-        bool,
+        PDBSlot,                             // pdb_from_slot
+        PDBSlot,                             // pdb_to_slot
+        String,                              // type_name
+        PrimitiveReconstructionFlavor,       // primitives_flavor
+        AccessSpecifierReconstructionFlavor, // print_access_specifiers,
+        bool,                                // print_header
+        bool,                                // reconstruct_dependencies
+        bool,                                // integers_as_hexadecimal
+        bool,                                // print_size_info
+        bool,                                // print_offset_info
+        bool,                                // print_brackets_new_line
+        bool,                                // ignore_std_types
     ),
     /// Reconstruct the diff of a symbol given its name.
     DiffSymbolByName(
         PDBSlot,
         PDBSlot,
         String,
-        PrimitiveReconstructionFlavor,
-        bool,
-        bool,
+        PrimitiveReconstructionFlavor,       // primitive_types_flavor
+        AccessSpecifierReconstructionFlavor, // print_access_specifiers,
+        bool,                                // print_header
     ),
     /// Reconstruct the diff of a module given its path.
     DiffModuleByPath(
         PDBSlot,
         PDBSlot,
         String,
-        PrimitiveReconstructionFlavor,
-        bool,
-        bool,
+        PrimitiveReconstructionFlavor,       // primitive_types_flavor
+        AccessSpecifierReconstructionFlavor, // print_access_specifiers,
+        bool,                                // print_header
     ),
     /// Retrieve a list of all types that reference the given type
     ListTypeCrossReferences(PDBSlot, pdb_file::TypeIndex),
@@ -318,10 +350,13 @@ fn worker_thread_routine(
                 pdb_slot,
                 type_index,
                 primitives_flavor,
+                print_access_specifiers,
                 print_header,
                 reconstruct_dependencies,
-                print_access_specifiers,
                 integers_as_hexadecimal,
+                print_size_info,
+                print_offset_info,
+                print_brackets_new_line,
                 ignore_std_types,
             ) => {
                 if let Some(pdb_file) = pdb_files.get(&pdb_slot) {
@@ -329,10 +364,13 @@ fn worker_thread_routine(
                         pdb_file,
                         type_index,
                         primitives_flavor,
+                        print_access_specifiers,
                         print_header,
                         reconstruct_dependencies,
-                        print_access_specifiers,
                         integers_as_hexadecimal,
+                        print_size_info,
+                        print_offset_info,
+                        print_brackets_new_line,
                         ignore_std_types,
                     );
                     frontend_controller.send_command(FrontendCommand::ReconstructTypeResult(
@@ -345,10 +383,13 @@ fn worker_thread_routine(
                 pdb_slot,
                 type_name,
                 primitives_flavor,
+                print_access_specifiers,
                 print_header,
                 reconstruct_dependencies,
-                print_access_specifiers,
                 integers_as_hexadecimal,
+                print_size_info,
+                print_offset_info,
+                print_brackets_new_line,
                 ignore_std_types,
             ) => {
                 if let Some(pdb_file) = pdb_files.get(&pdb_slot) {
@@ -356,10 +397,13 @@ fn worker_thread_routine(
                         pdb_file,
                         &type_name,
                         primitives_flavor,
+                        print_access_specifiers,
                         print_header,
                         reconstruct_dependencies,
-                        print_access_specifiers,
                         integers_as_hexadecimal,
+                        print_size_info,
+                        print_offset_info,
+                        print_brackets_new_line,
                         ignore_std_types,
                     );
                     frontend_controller.send_command(FrontendCommand::ReconstructTypeResult(
@@ -371,18 +415,24 @@ fn worker_thread_routine(
             BackendCommand::ReconstructAllTypes(
                 pdb_slot,
                 primitives_flavor,
-                print_header,
                 print_access_specifiers,
+                print_header,
                 integers_as_hexadecimal,
+                print_size_info,
+                print_offset_info,
+                print_brackets_new_line,
                 ignore_std_types,
             ) => {
                 if let Some(pdb_file) = pdb_files.get(&pdb_slot) {
                     let reconstructed_type_result = reconstruct_all_types_command(
                         pdb_file,
                         primitives_flavor,
-                        print_header,
                         print_access_specifiers,
+                        print_header,
                         integers_as_hexadecimal,
+                        print_size_info,
+                        print_offset_info,
+                        print_brackets_new_line,
                         ignore_std_types,
                     );
                     frontend_controller.send_command(FrontendCommand::ReconstructTypeResult(
@@ -500,16 +550,16 @@ fn worker_thread_routine(
                 pdb_slot,
                 symbol_index,
                 primitives_flavor,
-                print_header,
                 print_access_specifiers,
+                print_header,
             ) => {
                 if let Some(pdb_file) = pdb_files.get_mut(&pdb_slot) {
                     let result = reconstruct_symbol_by_index_command(
                         pdb_file,
                         symbol_index,
                         primitives_flavor,
-                        print_header,
                         print_access_specifiers,
+                        print_header,
                     );
                     frontend_controller
                         .send_command(FrontendCommand::ReconstructSymbolResult(result))?;
@@ -520,16 +570,16 @@ fn worker_thread_routine(
                 pdb_slot,
                 symbol_name,
                 primitives_flavor,
-                print_header,
                 print_access_specifiers,
+                print_header,
             ) => {
                 if let Some(pdb_file) = pdb_files.get_mut(&pdb_slot) {
                     let result = reconstruct_symbol_by_name_command(
                         pdb_file,
                         symbol_name,
                         primitives_flavor,
-                        print_header,
                         print_access_specifiers,
+                        print_header,
                     );
                     frontend_controller
                         .send_command(FrontendCommand::ReconstructSymbolResult(result))?;
@@ -539,15 +589,15 @@ fn worker_thread_routine(
             BackendCommand::ReconstructAllSymbols(
                 pdb_slot,
                 primitives_flavor,
-                print_header,
                 print_access_specifiers,
+                print_header,
             ) => {
                 if let Some(pdb_file) = pdb_files.get_mut(&pdb_slot) {
                     let result = reconstruct_all_symbols_command(
                         pdb_file,
                         primitives_flavor,
-                        print_header,
                         print_access_specifiers,
+                        print_header,
                     );
                     frontend_controller
                         .send_command(FrontendCommand::ReconstructSymbolResult(result))?;
@@ -559,8 +609,8 @@ fn worker_thread_routine(
                 pdb_to_slot,
                 symbol_name,
                 primitives_flavor,
-                print_header,
                 print_access_specifiers,
+                print_header,
             ) => {
                 if let Some(pdb_file_from) = pdb_files.get(&pdb_from_slot) {
                     if let Some(pdb_file_to) = pdb_files.get(&pdb_to_slot) {
@@ -569,8 +619,8 @@ fn worker_thread_routine(
                             pdb_file_to,
                             &symbol_name,
                             primitives_flavor,
-                            print_header,
                             print_access_specifiers,
+                            print_header,
                         );
                         frontend_controller
                             .send_command(FrontendCommand::DiffResult(symbol_diff_result))?;
@@ -582,17 +632,17 @@ fn worker_thread_routine(
                 pdb_slot,
                 module_index,
                 primitives_flavor,
-                print_header,
                 print_access_specifiers,
+                print_header,
             ) => {
                 if let Some(pdb_file) = pdb_files.get_mut(&pdb_slot) {
                     let reconstructed_module_result = reconstruct_module_by_index_command(
                         pdb_file,
                         module_index,
                         primitives_flavor,
+                        print_access_specifiers,
                         false,
                         print_header,
-                        print_access_specifiers,
                     );
                     frontend_controller.send_command(FrontendCommand::ReconstructModuleResult(
                         reconstructed_module_result,
@@ -623,10 +673,13 @@ fn worker_thread_routine(
                 pdb_to_slot,
                 type_name,
                 primitives_flavor,
+                print_access_specifiers,
                 print_header,
                 reconstruct_dependencies,
-                print_access_specifiers,
                 integers_as_hexadecimal,
+                print_size_info,
+                print_offset_info,
+                print_brackets_new_line,
                 ignore_std_types,
             ) => {
                 if let Some(pdb_file_from) = pdb_files.get(&pdb_from_slot) {
@@ -636,10 +689,13 @@ fn worker_thread_routine(
                             pdb_file_to,
                             &type_name,
                             primitives_flavor,
+                            print_access_specifiers,
                             print_header,
                             reconstruct_dependencies,
-                            print_access_specifiers,
                             integers_as_hexadecimal,
+                            print_size_info,
+                            print_offset_info,
+                            print_brackets_new_line,
                             ignore_std_types,
                         );
                         frontend_controller
@@ -653,8 +709,8 @@ fn worker_thread_routine(
                 pdb_to_slot,
                 module_path,
                 primitives_flavor,
-                print_header,
                 print_access_specifiers,
+                print_header,
             ) => {
                 if let Some(pdb_file_from) = pdb_files.get(&pdb_from_slot) {
                     if let Some(pdb_file_to) = pdb_files.get(&pdb_to_slot) {
@@ -663,8 +719,8 @@ fn worker_thread_routine(
                             pdb_file_to,
                             &module_path,
                             primitives_flavor,
-                            print_header,
                             print_access_specifiers,
+                            print_header,
                         );
                         frontend_controller
                             .send_command(FrontendCommand::DiffResult(module_diff_result))?;
@@ -689,10 +745,13 @@ fn reconstruct_type_by_index_command<'p, T>(
     pdb_file: &PdbFile<'p, T>,
     type_index: pdb_file::TypeIndex,
     primitives_flavor: PrimitiveReconstructionFlavor,
+    print_access_specifiers: AccessSpecifierReconstructionFlavor,
     print_header: bool,
     reconstruct_dependencies: bool,
-    print_access_specifiers: bool,
     integers_as_hexadecimal: bool,
+    print_size_info: bool,
+    print_offset_info: bool,
+    print_brackets_new_line: bool,
     ignore_std_types: bool,
 ) -> Result<ReconstructedType>
 where
@@ -701,9 +760,12 @@ where
     let (data, xrefs_from) = pdb_file.reconstruct_type_by_index(
         type_index,
         primitives_flavor,
-        reconstruct_dependencies,
         print_access_specifiers,
+        reconstruct_dependencies,
         integers_as_hexadecimal,
+        print_size_info,
+        print_offset_info,
+        print_brackets_new_line,
         ignore_std_types,
     )?;
     if print_header {
@@ -718,10 +780,13 @@ fn reconstruct_type_by_name_command<'p, T>(
     pdb_file: &PdbFile<'p, T>,
     type_name: &str,
     primitives_flavor: PrimitiveReconstructionFlavor,
+    print_access_specifiers: AccessSpecifierReconstructionFlavor,
     print_header: bool,
     reconstruct_dependencies: bool,
-    print_access_specifiers: bool,
     integers_as_hexadecimal: bool,
+    print_size_info: bool,
+    print_offset_info: bool,
+    print_brackets_new_line: bool,
     ignore_std_types: bool,
 ) -> Result<ReconstructedType>
 where
@@ -730,9 +795,12 @@ where
     let (data, xrefs_from) = pdb_file.reconstruct_type_by_name(
         type_name,
         primitives_flavor,
-        reconstruct_dependencies,
         print_access_specifiers,
+        reconstruct_dependencies,
         integers_as_hexadecimal,
+        print_size_info,
+        print_offset_info,
+        print_brackets_new_line,
         ignore_std_types,
     )?;
     if print_header {
@@ -746,9 +814,12 @@ where
 fn reconstruct_all_types_command<'p, T>(
     pdb_file: &PdbFile<'p, T>,
     primitives_flavor: PrimitiveReconstructionFlavor,
+    print_access_specifiers: AccessSpecifierReconstructionFlavor,
     print_header: bool,
-    print_access_specifiers: bool,
     integers_as_hexadecimal: bool,
+    print_size_info: bool,
+    print_offset_info: bool,
+    print_brackets_new_line: bool,
     ignore_std_types: bool,
 ) -> Result<String>
 where
@@ -758,6 +829,9 @@ where
         primitives_flavor,
         print_access_specifiers,
         integers_as_hexadecimal,
+        print_size_info,
+        print_offset_info,
+        print_brackets_new_line,
         ignore_std_types,
     )?;
     if print_header {
@@ -772,8 +846,8 @@ fn reconstruct_symbol_by_index_command<'p, T>(
     pdb_file: &mut PdbFile<'p, T>,
     symbol_index: pdb_file::SymbolIndex,
     primitives_flavor: PrimitiveReconstructionFlavor,
+    print_access_specifiers: AccessSpecifierReconstructionFlavor,
     print_header: bool,
-    print_access_specifiers: bool,
 ) -> Result<String>
 where
     T: io::Seek + io::Read + std::fmt::Debug + 'p,
@@ -795,8 +869,8 @@ fn reconstruct_symbol_by_name_command<'p, T>(
     pdb_file: &mut PdbFile<'p, T>,
     symbol_name: String,
     primitives_flavor: PrimitiveReconstructionFlavor,
+    print_access_specifiers: AccessSpecifierReconstructionFlavor,
     print_header: bool,
-    print_access_specifiers: bool,
 ) -> Result<String>
 where
     T: io::Seek + io::Read + std::fmt::Debug + 'p,
@@ -817,8 +891,8 @@ where
 fn reconstruct_all_symbols_command<'p, T>(
     pdb_file: &PdbFile<'p, T>,
     primitives_flavor: PrimitiveReconstructionFlavor,
+    print_access_specifiers: AccessSpecifierReconstructionFlavor,
     print_header: bool,
-    print_access_specifiers: bool,
 ) -> Result<String>
 where
     T: io::Seek + io::Read + std::fmt::Debug + 'p,
@@ -836,9 +910,9 @@ fn reconstruct_module_by_index_command<'p, T>(
     pdb_file: &mut PdbFile<'p, T>,
     module_index: pdb_file::ModuleIndex,
     primitives_flavor: PrimitiveReconstructionFlavor,
+    print_access_specifiers: AccessSpecifierReconstructionFlavor,
     ignore_std_types: bool,
     print_header: bool,
-    print_access_specifiers: bool,
 ) -> Result<String>
 where
     T: io::Seek + io::Read + std::fmt::Debug + 'p,

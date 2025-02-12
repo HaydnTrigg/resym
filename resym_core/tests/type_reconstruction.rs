@@ -1,6 +1,9 @@
 use std::path::Path;
 
-use resym_core::{pdb_file::PdbFile, pdb_types::PrimitiveReconstructionFlavor};
+use resym_core::{
+    pdb_file::PdbFile, pdb_types::AccessSpecifierReconstructionFlavor,
+    pdb_types::PrimitiveReconstructionFlavor,
+};
 
 const TEST_PDB_FILE_PATH: &str = "tests/data/test.pdb";
 const TEST_CASES: &[&str] = &[
@@ -35,9 +38,12 @@ fn test_type_reconstruction_portable_access_specifiers() {
     test_type_reconstruction_internal(
         "type_reconstruction_portable_access_specifiers",
         PrimitiveReconstructionFlavor::Portable,
+        AccessSpecifierReconstructionFlavor::Always,
         false,
         true,
         true,
+        true,
+        false,
         false,
     );
 }
@@ -47,9 +53,12 @@ fn test_type_reconstruction_microsoft_access_specifiers() {
     test_type_reconstruction_internal(
         "type_reconstruction_microsoft_access_specifiers",
         PrimitiveReconstructionFlavor::Microsoft,
+        AccessSpecifierReconstructionFlavor::Always,
         false,
         true,
         true,
+        true,
+        false,
         false,
     );
 }
@@ -59,9 +68,12 @@ fn test_type_reconstruction_raw_access_specifiers() {
     test_type_reconstruction_internal(
         "type_reconstruction_raw_access_specifiers",
         PrimitiveReconstructionFlavor::Raw,
+        AccessSpecifierReconstructionFlavor::Always,
         false,
         true,
         true,
+        true,
+        false,
         false,
     );
 }
@@ -71,9 +83,12 @@ fn test_type_reconstruction_msvc_access_specifiers() {
     test_type_reconstruction_internal(
         "type_reconstruction_msvc_access_specifiers",
         PrimitiveReconstructionFlavor::Msvc,
+        AccessSpecifierReconstructionFlavor::Always,
         false,
         true,
         true,
+        true,
+        false,
         false,
     );
 }
@@ -81,9 +96,12 @@ fn test_type_reconstruction_msvc_access_specifiers() {
 fn test_type_reconstruction_internal(
     test_name: &str,
     primitives_flavor: PrimitiveReconstructionFlavor,
+    print_access_specifiers: AccessSpecifierReconstructionFlavor,
     reconstruct_dependencies: bool,
-    print_access_specifiers: bool,
     integers_as_hexadecimal: bool,
+    print_size_info: bool,
+    print_offset_info: bool,
+    print_brackets_new_line: bool,
     ignore_std_types: bool,
 ) {
     let pdb_file = PdbFile::load_from_file(Path::new(TEST_PDB_FILE_PATH)).expect("load test.pdb");
@@ -92,9 +110,12 @@ fn test_type_reconstruction_internal(
             .reconstruct_type_by_name(
                 test_case_type_name,
                 primitives_flavor,
-                reconstruct_dependencies,
                 print_access_specifiers,
+                reconstruct_dependencies,
                 integers_as_hexadecimal,
+                print_size_info,
+                print_offset_info,
+                print_brackets_new_line,
                 ignore_std_types,
             )
             .unwrap_or_else(|_| panic!("reconstruct type: {test_case_type_name}"));

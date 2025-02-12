@@ -18,7 +18,9 @@ use method::Method;
 use primitive_types::primitive_kind_as_str;
 use union::Union;
 
-pub use primitive_types::{include_headers_for_flavor, PrimitiveReconstructionFlavor};
+pub use primitive_types::{
+    include_headers_for_flavor, AccessSpecifierReconstructionFlavor, PrimitiveReconstructionFlavor,
+};
 
 use self::forward_declaration::{ForwardDeclaration, ForwardDeclarationKind};
 
@@ -848,55 +850,78 @@ fn fmt_struct_fields_recursive(
                             let bit_offset_delta = field_bit_offset - potential_padding_bit_offset;
                             // Add padding if needed
                             if bit_offset_delta > 0 {
-                                writeln!(
-                                    f,
-                                    "{}/* {:#06x} */ {} : {}; /* BitPos={} */",
-                                    &indentation,
-                                    last_field.offset,
-                                    last_field.type_left,
-                                    bit_offset_delta,
-                                    potential_padding_bit_offset
-                                )?;
+                                write!(f, "{}", &indentation)?;
+                                if fmt_configuration.print_offset_info {
+                                    write!(f, "/* {:#06x} */ ", last_field.offset)?;
+                                }
+                                write!(f, "{} : {};", last_field.type_left, bit_offset_delta)?;
+                                if fmt_configuration.print_offset_info {
+                                    write!(f, " /* BitPos={potential_padding_bit_offset} */")?;
+                                }
+                                writeln!(f)?;
                             }
                         } else {
                             // Padding in the previous field
                             // FIXME(ergrelet): 0-bit padding is used systematically when we should only emit it when
                             // needed. It's not incorrect but might produce less elegant output.
-                            writeln!(
-                                f,
-                                "{}/* {:#06x} */ {} : 0; /* BitPos={} */",
-                                &indentation,
-                                last_field.offset,
-                                last_field.type_left,
-                                potential_padding_bit_offset
-                            )?;
+                            write!(f, "{}", &indentation)?;
+                            if fmt_configuration.print_offset_info {
+                                write!(f, "/* {:#06x} */ ", last_field.offset)?;
+                            }
+                            write!(f, "{} : 0;", last_field.type_left)?;
+                            if fmt_configuration.print_offset_info {
+                                write!(f, " /* BitPos={potential_padding_bit_offset} */")?;
+                            }
+                            writeln!(f)?;
                         }
                     }
                 }
             }
 
-            writeln!(
+            write!(f, "{}", &indentation)?;
+            if fmt_configuration.print_offset_info {
+                write!(f, "/* {:#06x} */ ", field.offset)?;
+            }
+            write!(
                 f,
-                "{}/* {:#06x} */ {}{} {}{};{}",
-                &indentation,
-                field.offset,
-                if fmt_configuration.print_access_specifiers {
-                    &field.access
-                } else {
-                    &FieldAccess::None
-                },
-                field.type_left,
-                field.name.to_string(),
-                field.type_right,
-                if let Some((bit_position, _)) = field.bitfield_info {
-                    format!(" /* BitPos={bit_position} */")
-                } else {
-                    String::default()
+                "{}",
+                match fmt_configuration.print_access_specifiers {
+                    AccessSpecifierReconstructionFlavor::Disabled => &FieldAccess::None,
+                    AccessSpecifierReconstructionFlavor::Always => &field.access,
+                    AccessSpecifierReconstructionFlavor::Automatic => {
+                        if field.access != FieldAccess::Public {
+                            &field.access
+                        } else {
+                            &FieldAccess::None
+                        }
+                    }
                 }
             )?;
+            write!(
+                f,
+                "{} {}{};",
+                field.type_left,
+                field.name.to_string(),
+                field.type_right
+            )?;
+            if fmt_configuration.print_offset_info {
+                if let Some((bit_position, _)) = field.bitfield_info {
+                    write!(f, " /* BitPos={bit_position} */")?;
+                }
+            }
+            writeln!(f)?;
             last_field = Some(field);
         } else {
-            writeln!(f, "{}union {{", &indentation)?;
+            writeln!(
+                f,
+                "{}union{}{{",
+                &indentation,
+                if fmt_configuration.print_brackets_new_line {
+                    format!("\n{}", &indentation)
+                } else {
+                    String::from(" ")
+                }
+            )?;
             fmt_union_fields_recursive(fmt_configuration, &fields[union_range], depth + 1, f)?;
             writeln!(f, "{}}};", &indentation)?;
             last_field = None;
@@ -1028,27 +1053,49 @@ fn fmt_union_fields_recursive(
         // Fields out of unnamed structs are represented by "empty" structs
         if struct_range.is_empty() {
             let field = &fields[struct_range.start];
-            writeln!(
+            write!(f, "{}", &indentation)?;
+            if fmt_configuration.print_offset_info {
+                write!(f, "/* {:#06x} */ ", field.offset)?;
+            }
+            write!(
                 f,
-                "{}/* {:#06x} */ {}{} {}{};{}",
-                &indentation,
-                field.offset,
-                if fmt_configuration.print_access_specifiers {
-                    &field.access
-                } else {
-                    &FieldAccess::None
-                },
-                field.type_left,
-                field.name.to_string(),
-                field.type_right,
-                if let Some((bit_position, _)) = field.bitfield_info {
-                    format!(" /* BitPos={bit_position} */")
-                } else {
-                    String::default()
+                "{}",
+                match fmt_configuration.print_access_specifiers {
+                    AccessSpecifierReconstructionFlavor::Disabled => &FieldAccess::None,
+                    AccessSpecifierReconstructionFlavor::Always => &field.access,
+                    AccessSpecifierReconstructionFlavor::Automatic => {
+                        if field.access != FieldAccess::Public {
+                            &field.access
+                        } else {
+                            &FieldAccess::None
+                        }
+                    }
                 }
             )?;
+            write!(
+                f,
+                "{} {}{};",
+                field.type_left,
+                field.name.to_string(),
+                field.type_right
+            )?;
+            if fmt_configuration.print_offset_info {
+                if let Some((bit_position, _)) = field.bitfield_info {
+                    write!(f, " /* BitPos={bit_position} */")?;
+                }
+            }
+            writeln!(f)?;
         } else {
-            writeln!(f, "{}struct {{", &indentation)?;
+            writeln!(
+                f,
+                "{}struct{}{{",
+                &indentation,
+                if fmt_configuration.print_brackets_new_line {
+                    format!("\n{}", &indentation)
+                } else {
+                    String::from(" ")
+                }
+            )?;
             fmt_struct_fields_recursive(fmt_configuration, &fields[struct_range], depth + 1, f)?;
             writeln!(f, "{}}};", &indentation)?;
         }
@@ -1112,15 +1159,21 @@ fn find_unnamed_structs_in_unions(fields: &[Field]) -> Vec<Range<usize>> {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DataFormatConfiguration {
-    pub print_access_specifiers: bool,
+    pub print_access_specifiers: AccessSpecifierReconstructionFlavor,
     pub integers_as_hexadecimal: bool,
+    pub print_size_info: bool,
+    pub print_offset_info: bool,
+    pub print_brackets_new_line: bool,
 }
 
 impl Default for DataFormatConfiguration {
     fn default() -> Self {
         Self {
-            print_access_specifiers: true,
+            print_access_specifiers: AccessSpecifierReconstructionFlavor::Always,
             integers_as_hexadecimal: true,
+            print_size_info: true,
+            print_offset_info: true,
+            print_brackets_new_line: false,
         }
     }
 }

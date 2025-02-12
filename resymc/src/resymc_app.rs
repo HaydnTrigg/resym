@@ -4,6 +4,7 @@ use anyhow::{anyhow, Result};
 use resym_core::{
     backend::{Backend, BackendCommand, PDBSlot},
     frontend::FrontendCommand,
+    pdb_types::AccessSpecifierReconstructionFlavor,
     pdb_types::PrimitiveReconstructionFlavor,
     syntax_highlighting::CodeTheme,
 };
@@ -92,10 +93,13 @@ impl ResymcApp {
         pdb_path: PathBuf,
         type_name: Option<String>,
         primitive_types_flavor: PrimitiveReconstructionFlavor,
+        print_access_specifiers: AccessSpecifierReconstructionFlavor,
         print_header: bool,
         print_dependencies: bool,
-        print_access_specifiers: bool,
         integers_as_hexadecimal: bool,
+        print_size_info: bool,
+        print_offset_info: bool,
+        print_brackets_new_line: bool,
         ignore_std_types: bool,
         highlight_syntax: bool,
         output_file_path: Option<PathBuf>,
@@ -119,10 +123,13 @@ impl ResymcApp {
                     PDB_MAIN_SLOT,
                     type_name,
                     primitive_types_flavor,
+                    print_access_specifiers,
                     print_header,
                     print_dependencies,
-                    print_access_specifiers,
                     integers_as_hexadecimal,
+                    print_size_info,
+                    print_offset_info,
+                    print_brackets_new_line,
                     ignore_std_types,
                 ))?;
         } else {
@@ -130,9 +137,12 @@ impl ResymcApp {
                 .send_command(BackendCommand::ReconstructAllTypes(
                     PDB_MAIN_SLOT,
                     primitive_types_flavor,
-                    print_header,
                     print_access_specifiers,
+                    print_header,
                     integers_as_hexadecimal,
+                    print_size_info,
+                    print_offset_info,
+                    print_brackets_new_line,
                     ignore_std_types,
                 ))?;
         }
@@ -169,10 +179,13 @@ impl ResymcApp {
         to_pdb_path: PathBuf,
         type_name: String,
         primitive_types_flavor: PrimitiveReconstructionFlavor,
+        print_access_specifiers: AccessSpecifierReconstructionFlavor,
         print_header: bool,
         print_dependencies: bool,
-        print_access_specifiers: bool,
         integers_as_hexadecimal: bool,
+        print_size_info: bool,
+        print_offset_info: bool,
+        print_brackets_new_line: bool,
         ignore_std_types: bool,
         highlight_syntax: bool,
         output_file_path: Option<PathBuf>,
@@ -219,10 +232,13 @@ impl ResymcApp {
             PDB_DIFF_TO_SLOT,
             type_name,
             primitive_types_flavor,
+            print_access_specifiers,
             print_header,
             print_dependencies,
-            print_access_specifiers,
             integers_as_hexadecimal,
+            print_size_info,
+            print_offset_info,
+            print_brackets_new_line,
             ignore_std_types,
         ))?;
         // Wait for the backend to finish
@@ -317,8 +333,8 @@ impl ResymcApp {
         pdb_path: PathBuf,
         module_id: usize,
         primitive_types_flavor: PrimitiveReconstructionFlavor,
+        print_access_specifiers: AccessSpecifierReconstructionFlavor,
         print_header: bool,
-        print_access_specifiers: bool,
         highlight_syntax: bool,
         output_file_path: Option<PathBuf>,
     ) -> Result<()> {
@@ -340,8 +356,8 @@ impl ResymcApp {
                 PDB_MAIN_SLOT,
                 module_id,
                 primitive_types_flavor,
-                print_header,
                 print_access_specifiers,
+                print_header,
             ))?;
         // Wait for the backend to finish filtering types
         if let FrontendCommand::ReconstructModuleResult(reconstructed_module) =
@@ -375,8 +391,8 @@ impl ResymcApp {
         to_pdb_path: PathBuf,
         module_path: String,
         primitive_types_flavor: PrimitiveReconstructionFlavor,
+        print_access_specifiers: AccessSpecifierReconstructionFlavor,
         print_header: bool,
-        print_access_specifiers: bool,
         highlight_syntax: bool,
         output_file_path: Option<PathBuf>,
     ) -> Result<()> {
@@ -422,8 +438,8 @@ impl ResymcApp {
             PDB_DIFF_TO_SLOT,
             module_path,
             primitive_types_flavor,
-            print_header,
             print_access_specifiers,
+            print_header,
         ))?;
         // Wait for the backend to finish
         if let FrontendCommand::DiffResult(reconstructed_module_diff_result) =
@@ -522,8 +538,8 @@ impl ResymcApp {
         pdb_path: PathBuf,
         symbol_name: Option<String>,
         primitive_types_flavor: PrimitiveReconstructionFlavor,
+        print_access_specifiers: AccessSpecifierReconstructionFlavor,
         print_header: bool,
-        print_access_specifiers: bool,
         highlight_syntax: bool,
         output_file_path: Option<PathBuf>,
     ) -> Result<()> {
@@ -548,16 +564,16 @@ impl ResymcApp {
                     PDB_MAIN_SLOT,
                     symbol_name,
                     primitive_types_flavor,
-                    print_header,
                     print_access_specifiers,
+                    print_header,
                 ))?;
         } else {
             self.backend
                 .send_command(BackendCommand::ReconstructAllSymbols(
                     PDB_MAIN_SLOT,
                     primitive_types_flavor,
-                    print_header,
                     print_access_specifiers,
+                    print_header,
                 ))?;
         }
         // Wait for the backend to finish filtering types
@@ -594,8 +610,8 @@ impl ResymcApp {
         to_pdb_path: PathBuf,
         symbol_name: String,
         primitive_types_flavor: PrimitiveReconstructionFlavor,
+        print_access_specifiers: AccessSpecifierReconstructionFlavor,
         print_header: bool,
-        print_access_specifiers: bool,
         highlight_syntax: bool,
         output_file_path: Option<PathBuf>,
     ) -> Result<()> {
@@ -645,8 +661,8 @@ impl ResymcApp {
             PDB_DIFF_TO_SLOT,
             symbol_name,
             primitive_types_flavor,
-            print_header,
             print_access_specifiers,
+            print_header,
         ))?;
         // Wait for the backend to finish
         if let FrontendCommand::DiffResult(reconstructed_symbol_diff_result) =
@@ -778,12 +794,15 @@ mod tests {
                 pdb_path,
                 None,
                 PrimitiveReconstructionFlavor::Microsoft,
-                false,
-                false,
-                false,
-                false,
-                false,
-                false,
+                AccessSpecifierReconstructionFlavor::Disabled,
+                false, // print_header
+                false, // print_dependencies
+                false, // integers_as_hexadecimal
+                true,  // print_size_info
+                true,  // print_offset_info
+                false, // print_brackets_new_line
+                false, // ignore_std_types
+                false, // highlight_syntax
                 None
             )
             .is_err());
@@ -800,12 +819,15 @@ mod tests {
                 pdb_path,
                 None,
                 PrimitiveReconstructionFlavor::Microsoft,
-                true,
-                true,
-                true,
-                true,
-                true,
-                true,
+                AccessSpecifierReconstructionFlavor::Always,
+                true,  // print_header
+                true,  // print_dependencies
+                true,  // integers_as_hexadecimal
+                true,  // print_size_info
+                true,  // print_offset_info
+                false, // print_brackets_new_line
+                true,  // ignore_std_types
+                true,  // highlight_syntax
                 None
             )
             .is_ok());
@@ -825,12 +847,15 @@ mod tests {
                 pdb_path,
                 Some("resym_test::ClassWithNestedDeclarationsTest".to_string()),
                 PrimitiveReconstructionFlavor::Microsoft,
-                false,
-                false,
-                false,
-                false,
-                false,
-                false,
+                AccessSpecifierReconstructionFlavor::Disabled,
+                false, // print_header
+                false, // print_dependencies
+                false, // integers_as_hexadecimal
+                true,  // print_size_info
+                true,  // print_offset_info
+                false, // print_brackets_new_line
+                false, // ignore_std_types
+                false, // highlight_syntax
                 Some(output_path.clone()),
             )
             .is_ok());
@@ -857,13 +882,16 @@ mod tests {
                 pdb_path_to,
                 "".to_string(),
                 PrimitiveReconstructionFlavor::Microsoft,
-                false,
-                false,
-                false,
-                false,
-                false,
-                false,
-                None
+                AccessSpecifierReconstructionFlavor::Disabled,
+                false, // print_header
+                false, // print_dependencies
+                false, // integers_as_hexadecimal
+                true,  // print_size_info
+                true,  // print_offset_info
+                false, // print_brackets_new_line
+                false, // ignore_std_types
+                false, // highlight_syntax
+                None   // output_file_path
             )
             .is_err());
     }
@@ -880,13 +908,16 @@ mod tests {
                 pdb_path_to,
                 "UserStructAddAndReplace".to_string(),
                 PrimitiveReconstructionFlavor::Microsoft,
-                true,
-                true,
-                true,
-                false,
-                true,
-                true,
-                None
+                AccessSpecifierReconstructionFlavor::Always,
+                true,  // print_header
+                true,  // print_dependencies
+                false, // integers_as_hexadecimal
+                true,  // print_size_info
+                true,  // print_offset_info
+                false, // print_brackets_new_line
+                true,  // ignore_std_types
+                true,  // highlight_syntax
+                None   // output_file_path
             )
             .is_ok());
     }
@@ -908,12 +939,15 @@ mod tests {
                 pdb_path_to,
                 "UserStructAddAndReplace".to_string(),
                 PrimitiveReconstructionFlavor::Portable,
-                false,
-                false,
-                false,
-                false,
-                false,
-                false,
+                AccessSpecifierReconstructionFlavor::Disabled,
+                false, // print_header
+                false, // print_dependencies
+                false, // integers_as_hexadecimal
+                true,  // print_size_info
+                true,  // print_offset_info
+                false, // print_brackets_new_line
+                false, // ignore_std_types
+                false, // highlight_syntax
                 Some(output_path.clone()),
             )
             .is_ok());
@@ -995,7 +1029,7 @@ mod tests {
                 pdb_path,
                 9, // exe_main.obj
                 PrimitiveReconstructionFlavor::Microsoft,
-                false,
+                AccessSpecifierReconstructionFlavor::Disabled,
                 false,
                 false,
                 None
@@ -1013,7 +1047,7 @@ mod tests {
                 pdb_path,
                 9, // exe_main.obj
                 PrimitiveReconstructionFlavor::Microsoft,
-                true,
+                AccessSpecifierReconstructionFlavor::Always,
                 true,
                 true,
                 None
@@ -1034,7 +1068,7 @@ mod tests {
                 pdb_path,
                 27, // default_local_stdio_options.obj
                 PrimitiveReconstructionFlavor::Portable,
-                false,
+                AccessSpecifierReconstructionFlavor::Disabled,
                 false,
                 false,
                 Some(output_path.clone()),
@@ -1070,7 +1104,7 @@ mod tests {
                 pdb_path_to,
                 "d:\\a01\\_work\\43\\s\\Intermediate\\vctools\\msvcrt.nativeproj_607447030\\objd\\amd64\\exe_main.obj".to_string(),
                 PrimitiveReconstructionFlavor::Microsoft,
-                false,
+                AccessSpecifierReconstructionFlavor::Disabled,
                 false,
                 false,
                 None
@@ -1091,8 +1125,9 @@ mod tests {
                 pdb_path_to,
                 "d:\\a01\\_work\\43\\s\\Intermediate\\vctools\\msvcrt.nativeproj_607447030\\objd\\amd64\\exe_main.obj".to_string(),
                 PrimitiveReconstructionFlavor::Microsoft,
+                AccessSpecifierReconstructionFlavor::Always,
                 true,
-                true,true,
+                true,
                 None
             )
             .is_ok());
@@ -1115,7 +1150,7 @@ mod tests {
                 pdb_path_to,
                 "d:\\a01\\_work\\43\\s\\Intermediate\\vctools\\msvcrt.nativeproj_607447030\\objd\\amd64\\default_local_stdio_options.obj".to_string(),
                 PrimitiveReconstructionFlavor::Portable,
-                false,
+                AccessSpecifierReconstructionFlavor::Disabled,
                 false,
                 false,
                 Some(output_path.clone()),
@@ -1199,7 +1234,7 @@ mod tests {
                 pdb_path,
                 Some("??1UnionTest@resym_test@@QEAA@XZ".to_string()),
                 PrimitiveReconstructionFlavor::Microsoft,
-                false,
+                AccessSpecifierReconstructionFlavor::Disabled,
                 false,
                 false,
                 None
@@ -1217,7 +1252,7 @@ mod tests {
                 pdb_path,
                 Some("??1UnionTest@resym_test@@QEAA@XZ".to_string()),
                 PrimitiveReconstructionFlavor::Microsoft,
-                true,
+                AccessSpecifierReconstructionFlavor::Always,
                 true,
                 true,
                 None
@@ -1238,7 +1273,7 @@ mod tests {
                 pdb_path,
                 Some("??1UnionTest@resym_test@@QEAA@XZ".to_string()),
                 PrimitiveReconstructionFlavor::Portable,
-                false,
+                AccessSpecifierReconstructionFlavor::Always,
                 false,
                 false,
                 Some(output_path.clone()),
@@ -1267,7 +1302,7 @@ mod tests {
                 pdb_path_to,
                 "?_RTC_GetSrcLine@@YAHPEAEPEA_WKPEAH1K@Z".to_string(),
                 PrimitiveReconstructionFlavor::Microsoft,
-                false,
+                AccessSpecifierReconstructionFlavor::Disabled,
                 false,
                 false,
                 None
@@ -1288,7 +1323,7 @@ mod tests {
                 pdb_path_to,
                 "?_RTC_GetSrcLine@@YAHPEAEPEA_WKPEAH1K@Z".to_string(),
                 PrimitiveReconstructionFlavor::Microsoft,
-                true,
+                AccessSpecifierReconstructionFlavor::Always,
                 true,
                 true,
                 None
@@ -1313,7 +1348,7 @@ mod tests {
                 pdb_path_to,
                 "?_RTC_GetSrcLine@@YAHPEAEPEA_WKPEAH1K@Z".to_string(),
                 PrimitiveReconstructionFlavor::Portable,
-                false,
+                AccessSpecifierReconstructionFlavor::Disabled,
                 false,
                 false,
                 Some(output_path.clone()),

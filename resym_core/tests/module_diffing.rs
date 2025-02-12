@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use resym_core::{
-    diffing::diff_module_by_path, pdb_file::PdbFile, pdb_types::PrimitiveReconstructionFlavor,
+    diffing::diff_module_by_path, pdb_file::PdbFile, pdb_types::{AccessSpecifierReconstructionFlavor, PrimitiveReconstructionFlavor},
 };
 
 const TEST_PDB_FROM_FILE_PATH: &str = "tests/data/test_diff_from.pdb";
@@ -22,7 +22,7 @@ fn test_module_diffing_by_path() {
         &mut pdb_file_to,
         TEST_MODULE_PATH,
         PrimitiveReconstructionFlavor::Portable,
-        true,
+        AccessSpecifierReconstructionFlavor::Always,
         true,
     )
     .unwrap_or_else(|err| panic!("module diffing failed: {err}"));

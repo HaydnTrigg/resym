@@ -63,7 +63,17 @@ impl ReconstructibleTypeData for Enum<'_> {
         fmt_configuration: &DataFormatConfiguration,
         f: &mut impl std::fmt::Write,
     ) -> fmt::Result {
-        writeln!(f, "enum {} : {} {{", self.name, self.underlying_type_name)?;
+        writeln!(
+            f,
+            "enum {} : {}{}{{",
+            self.name,
+            self.underlying_type_name,
+            if fmt_configuration.print_brackets_new_line {
+                "\n"
+            } else {
+                " "
+            }
+        )?;
 
         for value in &self.values {
             writeln!(

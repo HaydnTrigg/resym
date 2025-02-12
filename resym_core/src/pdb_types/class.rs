@@ -7,8 +7,8 @@ use super::{
     primitive_types::PrimitiveReconstructionFlavor,
     resolve_complete_type_index, type_bitfield_info, type_name, type_size,
     union::Union,
-    DataFormatConfiguration, Field, Method, NeededTypeSet, ReconstructibleTypeData, Result,
-    ResymCoreError, TypeForwarder,
+    AccessSpecifierReconstructionFlavor, DataFormatConfiguration, Field, Method, NeededTypeSet,
+    ReconstructibleTypeData, Result, ResymCoreError, TypeForwarder,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -445,7 +445,20 @@ impl ReconstructibleTypeData for Class<'_> {
             }
         }
 
-        writeln!(f, " {{ /* Size={:#x} */", self.size)?;
+        writeln!(
+            f,
+            "{}{{{}",
+            if fmt_configuration.print_brackets_new_line {
+                "\n"
+            } else {
+                " "
+            },
+            if fmt_configuration.print_size_info {
+                format!(" /* Size={:#x} */", self.size)
+            } else {
+                String::default()
+            }
+        )?;
 
         for base in &self.base_classes {
             writeln!(
@@ -483,10 +496,17 @@ impl ReconstructibleTypeData for Class<'_> {
             writeln!(
                 f,
                 "  {}static {} {}{};",
-                if fmt_configuration.print_access_specifiers {
-                    &field.access
-                } else {
-                    &FieldAccess::None
+                match fmt_configuration.print_access_specifiers {
+                    AccessSpecifierReconstructionFlavor::Disabled => &FieldAccess::None,
+                    AccessSpecifierReconstructionFlavor::Always => &field.access,
+                    AccessSpecifierReconstructionFlavor::Automatic => {
+                        if self.kind == pdb::ClassKind::Class || field.access != FieldAccess::Public
+                        {
+                            &field.access
+                        } else {
+                            &FieldAccess::None
+                        }
+                    }
                 },
                 field.type_left,
                 &field.name,
@@ -502,10 +522,18 @@ impl ReconstructibleTypeData for Class<'_> {
                 writeln!(
                     f,
                     "  {}{}{}{}{}({}){}{}{}{};",
-                    if fmt_configuration.print_access_specifiers {
-                        &method.access
-                    } else {
-                        &FieldAccess::None
+                    match fmt_configuration.print_access_specifiers {
+                        AccessSpecifierReconstructionFlavor::Disabled => &FieldAccess::None,
+                        AccessSpecifierReconstructionFlavor::Always => &method.access,
+                        AccessSpecifierReconstructionFlavor::Automatic => {
+                            if self.kind == pdb::ClassKind::Class
+                                || method.access != FieldAccess::Public
+                            {
+                                &method.access
+                            } else {
+                                &FieldAccess::None
+                            }
+                        }
                     },
                     if method.is_virtual { "virtual " } else { "" },
                     if method.is_ctor || method.is_dtor || method_has_class_name {
@@ -543,10 +571,18 @@ impl ReconstructibleTypeData for Class<'_> {
                 writeln!(
                     f,
                     "  {}static {}{}{}({}){}{}{};",
-                    if fmt_configuration.print_access_specifiers {
-                        &method.access
-                    } else {
-                        &FieldAccess::None
+                    match fmt_configuration.print_access_specifiers {
+                        AccessSpecifierReconstructionFlavor::Disabled => &FieldAccess::None,
+                        AccessSpecifierReconstructionFlavor::Always => &method.access,
+                        AccessSpecifierReconstructionFlavor::Automatic => {
+                            if self.kind == pdb::ClassKind::Class
+                                || method.access != FieldAccess::Public
+                            {
+                                &method.access
+                            } else {
+                                &FieldAccess::None
+                            }
+                        }
                     },
                     method.return_type_name.0,
                     if method.return_type_name.1.is_empty() {
