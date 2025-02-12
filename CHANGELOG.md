@@ -8,6 +8,8 @@
 - Add 4 commands to `resymc`: `list-symbols`, `dump-symbol`, `dump-all-symbols` and `diff-symbol`
 - Add a `MSVC` primitive type representations (@HaydnTrigg)
 - Add a setting to switch display of integer values between decimal and hexadecimal (@HaydnTrigg)
+- Add new `classes`, `unions` and `enums` filters for type searches
+- Allow navigating type and symbol lists with the keyboard via arrow up/down and page up/down (proposal by @0xeb)
 
 ### Changed
 
