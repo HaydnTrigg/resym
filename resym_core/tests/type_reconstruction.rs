@@ -93,6 +93,66 @@ fn test_type_reconstruction_msvc_access_specifiers() {
     );
 }
 
+#[test]
+fn test_type_reconstruction_automatic_access_specifiers() {
+    test_type_reconstruction_internal(
+        "type_reconstruction_automatic_access_specifiers",
+        PrimitiveReconstructionFlavor::Portable,
+        AccessSpecifierReconstructionFlavor::Automatic,
+        false,
+        true,
+        true,
+        true,
+        false,
+        false,
+    );
+}
+
+#[test]
+fn test_type_reconstruction_no_size_info() {
+    test_type_reconstruction_internal(
+        "test_type_reconstruction_no_size_info",
+        PrimitiveReconstructionFlavor::Portable,
+        AccessSpecifierReconstructionFlavor::Automatic,
+        false,
+        true,
+        false,
+        true,
+        false,
+        false,
+    );
+}
+
+#[test]
+fn test_type_reconstruction_no_offset_info() {
+    test_type_reconstruction_internal(
+        "test_type_reconstruction_no_offset_info",
+        PrimitiveReconstructionFlavor::Portable,
+        AccessSpecifierReconstructionFlavor::Automatic,
+        false,
+        true,
+        true,
+        false,
+        false,
+        false,
+    );
+}
+
+#[test]
+fn test_type_reconstruction_no_comments() {
+    test_type_reconstruction_internal(
+        "test_type_reconstruction_no_comments",
+        PrimitiveReconstructionFlavor::Portable,
+        AccessSpecifierReconstructionFlavor::Automatic,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+    );
+}
+
 fn test_type_reconstruction_internal(
     test_name: &str,
     primitives_flavor: PrimitiveReconstructionFlavor,

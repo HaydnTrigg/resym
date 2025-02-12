@@ -1,0 +1,29 @@
+---
+source: resym_core/tests/type_reconstruction.rs
+assertion_line: 184
+expression: reconstructed_type
+---
+struct resym_test::PrimitiveTypesTest {
+  bool b1;
+  char c1;
+  unsigned char c2;
+  char8_t c3;
+  char16_t c4;
+  char32_t c5;
+  wchar_t w1;
+  uint16_t i1;
+  int16_t i2;
+  uint32_t i3;
+  int32_t i4;
+  uint32_t i5;
+  int32_t i6;
+  uint64_t i7;
+  int64_t i8;
+  uint64_t i9;
+  int64_t i10;
+  float f1;
+  double f2;
+  double f3;
+  double f4;
+  int32_t hres;
+};

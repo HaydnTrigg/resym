@@ -1,0 +1,9 @@
+---
+source: resym_core/tests/type_reconstruction.rs
+assertion_line: 184
+expression: reconstructed_type
+---
+struct resym_test::NtdllRegression1 { /* Size=0xe8 */
+  void (* KernelRoutine)(resym_test::_KAPC*, void (**)(void*, void*, void*), void**, void**, void**);
+  int32_t (* MajorFunction[28])(resym_test::_DEVICE_OBJECT*, resym_test::_IRP*);
+};

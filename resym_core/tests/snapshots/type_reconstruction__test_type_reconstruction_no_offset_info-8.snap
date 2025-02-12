@@ -1,0 +1,43 @@
+---
+source: resym_core/tests/type_reconstruction.rs
+assertion_line: 184
+expression: reconstructed_type
+---
+struct resym_test::StructUnnamedUdtTest1 { /* Size=0xa0 */
+  union {
+    struct {
+      uint32_t i1;
+      uint32_t i2;
+      union {
+        uint32_t i3;
+        uint32_t i4;
+      };
+    };
+    uint32_t i5;
+    struct {
+      uint32_t i21;
+      uint32_t i22;
+      uint32_t i23;
+    };
+    resym_test::PrimitiveTypesTest s1;
+    uint64_t QuadPart;
+  };
+  uint64_t QuadPart2;
+  uint64_t QuadPart3;
+  union {
+    uint32_t Reserved;
+    struct {
+      unsigned char Type;
+      unsigned char Reserved1;
+      uint16_t Reserved2;
+    };
+  };
+  int32_t i6;
+  int32_t i7;
+  union {
+    void* c1;
+    char c2;
+  };
+  int32_t i8;
+  int32_t i9;
+};

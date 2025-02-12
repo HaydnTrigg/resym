@@ -1,7 +1,9 @@
 use std::path::Path;
 
 use resym_core::{
-    diffing::diff_type_by_name, pdb_file::PdbFile, pdb_types::{AccessSpecifierReconstructionFlavor, PrimitiveReconstructionFlavor},
+    diffing::diff_type_by_name,
+    pdb_file::PdbFile,
+    pdb_types::{AccessSpecifierReconstructionFlavor, PrimitiveReconstructionFlavor},
 };
 
 const TEST_PDB_FROM_FILE_PATH: &str = "tests/data/test_diff_from.pdb";
@@ -31,8 +33,8 @@ fn test_struct_diffing() {
             false, // print_header
             false, // reconstruct_dependencies
             false, // integers_as_hexadecimal
-            true, // print_size_info
-            true, // print_offset_info
+            true,  // print_size_info
+            true,  // print_offset_info
             false, // print_brackets_new_line
             false, // ignore_std_types
         )
@@ -57,8 +59,8 @@ fn test_struct_diffing_inexistent_type() {
         false, // print_header
         false, // reconstruct_dependencies
         false, // integers_as_hexadecimal
-        true, // print_size_info
-        true, // print_offset_info
+        true,  // print_size_info
+        true,  // print_offset_info
         false, // print_brackets_new_line
         false, // ignore_std_types
     )

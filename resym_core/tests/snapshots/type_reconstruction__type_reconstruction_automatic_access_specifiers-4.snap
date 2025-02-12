@@ -1,0 +1,25 @@
+---
+source: resym_core/tests/type_reconstruction.rs
+assertion_line: 184
+expression: reconstructed_type
+---
+union resym_test::UnionTest { /* Size=0x8 */
+  /* 0x0000 */ unsigned char u1;
+  /* 0x0000 */ uint16_t u2;
+  /* 0x0000 */ uint32_t u3;
+  /* 0x0000 */ uint64_t u4;
+  static uint64_t su5;
+  
+  UnionTest();
+  ~UnionTest();
+  void* GetPtr();
+  void* ConstMethod() const;
+  void* VolatileMethod() volatile;
+  void* ConstVolatileMethod() const volatile;
+  void (*ReturnFuncPointerMethod())(int32_t);
+  void* __vecDelDtor(uint32_t);
+  
+  static int32_t Magic();
+  static int32_t MagicVar1(...);
+  static int32_t MagicVar2(int32_t, ...);
+};

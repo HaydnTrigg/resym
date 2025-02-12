@@ -1,7 +1,9 @@
 use std::path::Path;
 
 use resym_core::{
-    diffing::diff_module_by_path, pdb_file::PdbFile, pdb_types::{AccessSpecifierReconstructionFlavor, PrimitiveReconstructionFlavor},
+    diffing::diff_module_by_path,
+    pdb_file::PdbFile,
+    pdb_types::{AccessSpecifierReconstructionFlavor, PrimitiveReconstructionFlavor},
 };
 
 const TEST_PDB_FROM_FILE_PATH: &str = "tests/data/test_diff_from.pdb";

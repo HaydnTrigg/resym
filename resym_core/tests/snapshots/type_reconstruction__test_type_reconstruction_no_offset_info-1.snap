@@ -1,0 +1,13 @@
+---
+source: resym_core/tests/type_reconstruction.rs
+assertion_line: 184
+expression: reconstructed_type
+---
+struct resym_test::ArrayTest { /* Size=0x5418 */
+  char array1[64];
+  int32_t array2[64];
+  resym_test::PrimitiveTypesTest array3[64];
+  char array4[1][2][3][4][5];
+  int32_t array5[1][2][3][4][5];
+  resym_test::PrimitiveTypesTest array6[1][2][3][4][5];
+};

@@ -1,0 +1,10 @@
+---
+source: resym_core/tests/type_reconstruction.rs
+assertion_line: 184
+expression: reconstructed_type
+---
+struct resym_test::BitFieldsTest7 {
+  /* 0x0000 */ uint16_t b1 : 3; /* BitPos=0 */
+  /* 0x0000 */ uint16_t : 0; /* BitPos=3 */
+  /* 0x0004 */ uint32_t b2 : 3; /* BitPos=0 */
+};

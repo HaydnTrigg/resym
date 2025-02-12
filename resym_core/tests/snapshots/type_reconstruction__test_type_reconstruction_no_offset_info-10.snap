@@ -1,0 +1,30 @@
+---
+source: resym_core/tests/type_reconstruction.rs
+assertion_line: 184
+expression: reconstructed_type
+---
+struct resym_test::StructUnnamedUdtTest3 { /* Size=0x40 */
+  uint64_t Before;
+  union {
+    struct {
+      uint64_t u1;
+      uint64_t u2;
+    };
+    struct {
+      uint64_t* p1;
+      uint64_t* p2;
+      uint64_t* p3;
+      uint64_t* p4;
+    };
+    struct {
+      uint64_t* p5;
+      uint64_t* p6;
+    };
+  };
+  uint64_t Middle;
+  union {
+    uint64_t u3;
+    uint64_t* p7;
+  };
+  uint64_t After;
+};
